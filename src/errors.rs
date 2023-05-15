@@ -11,3 +11,5 @@ pub enum Error {
     #[error("failed to get document nodes from XPATH query {0:?}")]
     XpathQuerying(String),
 }
+
+pub type Result<T> = std::result::Result<T, Error>;
