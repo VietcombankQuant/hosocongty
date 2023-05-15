@@ -6,3 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.71"
+env_logger = "0.10.0"
+libxml = "0.3.2"
+log = { version = "0.4.17", features = ["serde"] }
+reqwest = { version = "0.11", features = ["cookies", "gzip", "rustls", "json", "serde_json"] }
+rocksdb = { version = "0.21.0", features = ["serde", "serde1"] }
+serde = { version = "1.0.163", features = ["derive"] }
+serde_json = "1.0.96"
+thiserror = "1.0.40"
+tokio = { version = "1.28.1", features = ["full"] }
