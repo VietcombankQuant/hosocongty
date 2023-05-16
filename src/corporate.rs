@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use crate::{
     common::{Coporate, API_DOMAIN},
     results,
@@ -29,32 +31,51 @@ pub async fn get_corporate_info(url: String) -> results::Result<Coporate> {
         .findnodes(query)
         .map_err(|_| results::Error::XpathQuerying(query.to_string()))?;
 
-    let results = elements
+    let mut results = elements
         .into_iter()
         .filter_map(|element| -> Option<(String, String)> {
-            let mut labels = match element.findvalues("./label//text()") {
-                Ok(labels) => labels,
+            let label = match element.findvalues("./label//text()") {
+                Ok(labels) => labels.concat(),
                 Err(_) => return None,
             };
 
-            let label = match labels.pop() {
-                Some(label) => label,
-                None => return None,
-            };
-
-            let mut values = match element.findvalues("./span//text()") {
-                Ok(values) => values,
+            let value = match element.findvalues("./span//text()") {
+                Ok(values) => values.concat(),
                 Err(_) => return None,
-            };
-
-            let value = match values.pop() {
-                Some(value) => value,
-                None => return None,
             };
 
             Some((label, value))
         })
         .collect::<Coporate>();
+
+    // Coporate Name
+    let query = r#"//ul[@class = "hsct"]/li[1]/h1/text()"#;
+    let corporate_name = rootnode
+        .findvalues(query)
+        .map_err(|_| results::Error::XpathQuerying(query.to_string()))?
+        .concat();
+
+    results.insert("Tên doanh nghiệp".to_string(), corporate_name);
+
+    // Tax code
+    let query =
+        r#"//ul[@class = "hsct"]/li[./label/i[contains(@class, "fa-hashtag")]]/span/text()"#;
+    let tax_code = rootnode
+        .findvalues(query)
+        .map_err(|_| results::Error::XpathQuerying(query.to_string()))?
+        .concat();
+
+    results.insert("TaxCode".to_string(), tax_code);
+
+    // Last updated date
+    let query = r#"//ul[@class = "hsct"]/li[./i[contains(@class, "fa-clock-o")]]/i[last()]/text()"#;
+    let last_update = rootnode
+        .findvalues(query)
+        .map_err(|_| results::Error::XpathQuerying(query.to_string()))?
+        .concat();
+    results.insert("Ngày cập nhật cuối".to_string(), last_update);
+
+    // Decode Email
 
     Ok(results)
 }
