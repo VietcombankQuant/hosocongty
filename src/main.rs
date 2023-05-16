@@ -5,17 +5,11 @@ mod common;
 mod corporate;
 mod errors;
 mod page;
-
-fn setup_logger() {
-    let env = env_logger::Env::new()
-        .default_filter_or("info")
-        .default_write_style_or("auto");
-    env_logger::init_from_env(env);
-}
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), errors::Error> {
-    setup_logger();
+    utils::setup_logger();
 
     let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
     tokio::spawn(async move { page::get_links(1..=2, sender).await });
