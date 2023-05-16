@@ -35,14 +35,22 @@ pub async fn get_corporate_info(url: String) -> results::Result<Coporate> {
         .into_iter()
         .filter_map(|element| -> Option<(String, String)> {
             let label = match element.findvalues("./label//text()") {
-                Ok(labels) => labels.concat(),
+                Ok(labels) => labels,
                 Err(_) => return None,
-            };
+            }
+            .into_iter()
+            .fold(String::default(), |result, elem| result + elem.trim());
 
             let value = match element.findvalues("./span//text()") {
-                Ok(values) => values.concat(),
+                Ok(values) => values,
                 Err(_) => return None,
-            };
+            }
+            .into_iter()
+            .fold(String::default(), |result, elem| result + elem.trim());
+
+            if label.is_empty() || value.is_empty() {
+                return None;
+            }
 
             Some((label, value))
         })
@@ -58,13 +66,17 @@ pub async fn get_corporate_info(url: String) -> results::Result<Coporate> {
     results.insert("Tên doanh nghiệp".to_string(), corporate_name);
 
     // Tax code
-    let query =
-        r#"//ul[@class = "hsct"]/li[./label/i[contains(@class, "fa-hashtag")]]/span/text()"#;
-    let tax_code = rootnode
-        .findvalues(query)
-        .map_err(|_| results::Error::XpathQuerying(query.to_string()))?
-        .concat();
-
+    let tax_code = match results.remove_entry("Mã số thuế:") {
+        Some((_key, value)) => value,
+        None => {
+            let query = r#"//ul[@class = "hsct"]/li[./label/i[contains(@class, "fa-hashtag")]]/span/text()"#;
+            let tax_code = rootnode
+                .findvalues(query)
+                .map_err(|_| results::Error::XpathQuerying(query.to_string()))?
+                .concat();
+            tax_code
+        }
+    };
     results.insert("TaxCode".to_string(), tax_code);
 
     // Last updated date
@@ -73,7 +85,9 @@ pub async fn get_corporate_info(url: String) -> results::Result<Coporate> {
         .findvalues(query)
         .map_err(|_| results::Error::XpathQuerying(query.to_string()))?
         .concat();
-    results.insert("Ngày cập nhật cuối".to_string(), last_update);
+    if !last_update.is_empty() {
+        results.insert("Ngày cập nhật cuối".to_string(), last_update);
+    }
 
     // Decode Email
 
