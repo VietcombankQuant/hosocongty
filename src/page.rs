@@ -45,7 +45,7 @@ pub async fn get_links<I: IntoIterator<Item = u32>>(pages: I, sender: UnboundedS
     futures::stream::iter(pages)
         .map(move |page| (page, sender.clone()))
         .map(|(page, sender)| async move { internal::get_links(page, sender).await })
-        .buffer_unordered(8)
+        .buffer_unordered(64)
         .collect::<()>()
         .await;
 }

@@ -47,7 +47,7 @@ async fn main() -> Result<(), results::Error> {
     tokio::spawn(async move { page::get_links(1..=last_page, sender).await });
     UnboundedReceiverStream::new(receiver)
         .map(corporate::get_corporate_info)
-        .buffer_unordered(8)
+        .buffer_unordered(64)
         .map(move |result| (result, storage.clone()))
         .map(|(result, storage)| match result {
             Err(err) => {
