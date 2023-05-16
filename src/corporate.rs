@@ -1,33 +1,33 @@
 use crate::{
     common::{Coporate, API_DOMAIN},
-    errors,
+    results,
 };
 
-pub async fn get_corporate_info(url: String) -> errors::Result<Coporate> {
+pub async fn get_corporate_info(url: String) -> results::Result<Coporate> {
     let url = format!("https://{}/{}", API_DOMAIN, url);
 
     let resp = reqwest::get(&url)
         .await
-        .map_err(|err| errors::Error::HttpRequest(err))?
+        .map_err(|err| results::Error::HttpRequest(err))?
         .error_for_status()
-        .map_err(|err| errors::Error::HttpRequest(err))?;
+        .map_err(|err| results::Error::HttpRequest(err))?;
 
     let content = resp
         .text()
         .await
-        .map_err(|err| errors::Error::HttpRequest(err))?;
+        .map_err(|err| results::Error::HttpRequest(err))?;
 
     let parser = libxml::parser::Parser::default_html();
     let document = parser
         .parse_string(content.as_bytes())
-        .map_err(|err| errors::Error::HtmlParsing(err))?;
+        .map_err(|err| results::Error::HtmlParsing(err))?;
 
     let rootnode = document.get_root_element().unwrap();
 
     let query = r#"//ul[@class = "hsct"]/li"#;
     let elements = rootnode
         .findnodes(query)
-        .map_err(|_| errors::Error::XpathQuerying(query.to_string()))?;
+        .map_err(|_| results::Error::XpathQuerying(query.to_string()))?;
 
     let results = elements
         .into_iter()

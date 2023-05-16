@@ -3,12 +3,12 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 mod common;
 mod corporate;
-mod errors;
+mod results;
 mod page;
 mod utils;
 
 #[tokio::main]
-async fn main() -> Result<(), errors::Error> {
+async fn main() -> Result<(), results::Error> {
     utils::setup_logger();
 
     let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
