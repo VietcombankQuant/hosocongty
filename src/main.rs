@@ -18,7 +18,7 @@ async fn main() -> Result<(), errors::Error> {
     setup_logger();
 
     let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
-    tokio::spawn(async move { page::get_links(1, sender).await });
+    tokio::spawn(async move { page::get_links(1..=2, sender).await });
     UnboundedReceiverStream::new(receiver)
         .map(corporate::get_corporate_info)
         .buffer_unordered(8)
