@@ -10,6 +10,9 @@ pub enum Error {
 
     #[error("failed to get document nodes from XPATH query {0:?}")]
     XpathQuerying(String),
+
+    #[error("{0:?}")]
+    Other(anyhow::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
