@@ -1,3 +1,5 @@
+use tokio::sync::mpsc::UnboundedSender;
+
 use crate::{common::API_DOMAIN, errors};
 
 pub async fn last_page() -> errors::Result<u32> {
@@ -38,7 +40,34 @@ pub async fn last_page() -> errors::Result<u32> {
     Ok(last_page)
 }
 
-pub async fn get_links(page: u32) -> errors::Result<Vec<String>> {
+pub async fn get_links(page: u32, sender: UnboundedSender<String>) {
+    let urls = match _get_links_helper(page).await {
+        Ok(urls) => urls,
+        Err(err) => {
+            log::error!(
+                "Failed to get links from page {} with error `{}`",
+                page,
+                err
+            );
+            return;
+        }
+    };
+
+    urls.into_iter()
+        .map(|url| match sender.send(url) {
+            Ok(_) => {}
+            Err(err) => {
+                log::error!(
+                    "Failed to send urls extracted from page {} to stream channel with error {}",
+                    page,
+                    err.to_string()
+                );
+            }
+        })
+        .for_each(drop);
+}
+
+async fn _get_links_helper(page: u32) -> errors::Result<Vec<String>> {
     let url = format!("https://{}/page-{}", API_DOMAIN, page);
 
     let resp = reqwest::get(&url)
