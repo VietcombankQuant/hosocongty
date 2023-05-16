@@ -3,8 +3,8 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 mod common;
 mod corporate;
-mod results;
 mod page;
+mod results;
 mod utils;
 
 #[tokio::main]
