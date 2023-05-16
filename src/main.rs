@@ -35,14 +35,16 @@ fn save_corporate_info(storage: &rocksdb::DB, corporate: &Coporate) -> results::
 async fn main() -> Result<(), results::Error> {
     utils::setup_logger();
 
+    // Setup Database
     let db_path = "storage";
-
     let storage = rocksdb::DB::open_default(db_path)
         .map_err(|err| results::Error::Other(anyhow::Error::from(err)))?;
     let storage = Arc::new(storage);
 
+    // Setup streams
+    let last_page = page::last_page().await?;
     let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
-    tokio::spawn(async move { page::get_links(1..=10, sender).await });
+    tokio::spawn(async move { page::get_links(1..=last_page, sender).await });
     UnboundedReceiverStream::new(receiver)
         .map(corporate::get_corporate_info)
         .buffer_unordered(8)
